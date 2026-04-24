@@ -2,7 +2,7 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes, CommandHandler
 import re
 
-TOKEN 8639850909:AAEVJ1lnwd2qnrms09WTNuPeff3n6L4YHiU
+TOKEN = "8639850909:AAEVJ1lnwd2qnrmso9WTNuPeff3n6L4YHiU"
 
 expenses = []
 
