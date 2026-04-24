@@ -2,51 +2,52 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes, CommandHandler
 import re
 
-TOKEN = "8639850909:AAEVJ1lnwd2qnrms09WTNuPeff3n6L4YHiU""
+TOKEN 8639850909:AAEVJ1lnwd2qnrms09WTNuPeff3n6L4YHiU
 
 expenses = []
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Yozavering, o‘zim hisoblayman 😎")
+ADMIN_ID = 311150720  # <-- BU YERGA O'ZINGIZNI ID QO'YING
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.lower()
 
-    usd = re.findall(r'(\d+)\s*\$|\b(\d+)\s*usd', text)
-    uzs = re.findall(r'\b\d{3,}\b', text)
+    dollars = re.findall(r'(\d+)\s*\$', text)
+    numbers = re.findall(r'\d+', text)
 
-    added = False
-
-    for u in uzs:
-        expenses.append(("uzs", int(u)))
-        added = True
-
-    for d in usd:
-        num = d[0] if d[0] else d[1]
-        if num:
-            expenses.append(("usd", int(num)))
-            added = True
-
-    if added:
-        await update.message.reply_text("✅ Qo‘shildi")
-    else:
+    if not numbers:
         await update.message.reply_text("❌ Raqam topilmadi")
+        return
+
+    for d in dollars:
+        expenses.append((float(d), "usd"))
+
+    for n in numbers:
+        if n not in dollars:
+            expenses.append((float(n), "uzs"))
+
+    await update.message.reply_text("✅ Qo‘shildi")
 
 async def hisob(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    total_uzs = sum(x[1] for x in expenses if x[0] == "uzs")
-    total_usd = sum(x[1] for x in expenses if x[0] == "usd")
+    total_uzs = sum(a for a, c in expenses if c == "uzs")
+    total_usd = sum(a for a, c in expenses if c == "usd")
 
     await update.message.reply_text(
-        f"📊 UZS: {total_uzs}\n💵 USD: {total_usd}"
+        f"📊 HISOB:\n\n"
+        f"💰 {total_uzs:,.0f} so‘m\n"
+        f"💵 ${total_usd:,.0f}"
     )
 
 async def tozalash(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    expenses.clear()
-    await update.message.reply_text("🗑 Tozalandi")
+    if update.effective_user.id != ADMIN_ID:
+        await update.message.reply_text("❌ Sizga ruxsat yo‘q")
+        return
+
+    global expenses
+    expenses = []
+    await update.message.reply_text("🗑 Hisob tozalandi")
 
 app = ApplicationBuilder().token(TOKEN).build()
 
-app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("hisob", hisob))
 app.add_handler(CommandHandler("tozalash", tozalash))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
